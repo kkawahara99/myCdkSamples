@@ -38,6 +38,18 @@ NagSuppressions.addStackSuppressions(stack, [
     id: 'AwsSolutions-EC23',
     reason: 'Use 0.0.0.0/0 for DMZ'
   },
+  {
+    id: 'AwsSolutions-RDS6',
+    reason: 'IAM Database Authentication is not required'
+  },
+  {
+    id: 'AwsSolutions-RDS11',
+    reason: 'Use 3306 port'
+  },
+  {
+    id: "CdkNagValidationFailure",
+    reason: "https://github.com/cdklabs/cdk-nag/issues/817"
+  },
 ])
 
 // cdk-nag check.
