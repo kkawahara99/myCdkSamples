@@ -50,6 +50,14 @@ NagSuppressions.addStackSuppressions(stack, [
     id: "CdkNagValidationFailure",
     reason: "https://github.com/cdklabs/cdk-nag/issues/817"
   },
+  {
+    id: "AwsSolutions-IAM4",
+    reason: "Use managed policy"
+  },
+  {
+    id: "AwsSolutions-IAM5",
+    reason: "Use wild card"
+  },
 ])
 
 // cdk-nag check.

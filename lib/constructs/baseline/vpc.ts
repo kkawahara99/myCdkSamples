@@ -2,18 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-import { NagSuppressions } from 'cdk-nag'
 
-export interface IResult {
-  vpc: ec2.Vpc
-  securityGroup: {
-    public: ec2.SecurityGroup
-    private: ec2.SecurityGroup
-    secure: ec2.SecurityGroup
-  }
-}
-
-export interface IConstructProps {
+export interface VpcProps {
   bucketName?: string
   vpcName?: string
   sgPubricName?: string
@@ -21,10 +11,15 @@ export interface IConstructProps {
   sgSecureName?: string
 }
 
-export class VpcConstruct extends Construct {
-  public readonly result: IResult;
+export class Vpc extends Construct {
+  public readonly vpc: ec2.Vpc;
+  public readonly securityGroup: {
+    public: ec2.SecurityGroup
+    private: ec2.SecurityGroup
+    secure: ec2.SecurityGroup
+  };
 
-  constructor(scope: Construct, id: string, props: IConstructProps) {
+  constructor(scope: Construct, id: string, props: VpcProps) {
     super(scope, id);
 
     // Create S3 Bucket for Flowlogs.
@@ -111,13 +106,11 @@ export class VpcConstruct extends Construct {
     );
 
     // Set Result
-    this.result = {
-      vpc: vpc,
-      securityGroup: {
-        public: sgPubric,
-        private: sgPrivate,
-        secure: sgSecure,
-      }
-    }
+    this.vpc = vpc;
+    this.securityGroup = {
+      public: sgPubric,
+      private: sgPrivate,
+      secure: sgSecure,
+    };
   }
 }

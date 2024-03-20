@@ -4,12 +4,7 @@ import * as rds from 'aws-cdk-lib/aws-rds';
 import * as secrets from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 
-export interface IResult {
-  dbSecret: secrets.Secret
-  aurora: rds.DatabaseCluster
-}
-
-export interface IConstructProps {
+export interface AuroraMySqlProps {
   dbUserName: string
   vpc: ec2.Vpc
   subnets: ec2.ISubnet[]
@@ -20,10 +15,11 @@ export interface IConstructProps {
   endpointName?: string
 }
 
-export class AuroraConstruct extends Construct {
-  public readonly result: IResult;
+export class AuroraMySql extends Construct {
+  public readonly dbSecret: secrets.Secret;
+  public readonly aurora: rds.DatabaseCluster;
 
-  constructor(scope: Construct, id: string, props: IConstructProps) {
+  constructor(scope: Construct, id: string, props: AuroraMySqlProps) {
     super(scope, id);
 
     // Create Secret
@@ -37,7 +33,7 @@ export class AuroraConstruct extends Construct {
       },
     })
 
-    // Create Aurora Serverless v2.
+    // Create Aurora Serverless v2 : MySQL.
     const aurora = new rds.DatabaseCluster(this, 'Aurora', {
       clusterIdentifier: props.clusterIdentifier,
       backtrackWindow: cdk.Duration.hours(1),
@@ -81,9 +77,7 @@ export class AuroraConstruct extends Construct {
     }
 
     // Set Result
-    this.result = {
-      dbSecret: dbSecret,
-      aurora: aurora,
-    }
+    this.dbSecret = dbSecret;
+    this.aurora = aurora;
   }
 }

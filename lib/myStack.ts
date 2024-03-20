@@ -1,8 +1,10 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as utils from './utils/index';
-import { VpcConstruct } from './constructs/baseline/vpc';
-import { AuroraConstruct } from './constructs/databases/aurora';
+import { Vpc } from './constructs/baseline/vpc';
+import { AuroraMySql } from './constructs/databases/auroraMySql';
+import { Ecr } from './constructs/registries/ecr';
+import { EcsFargate } from './constructs/servers/ecsFargate';
 
 export interface IMyStackProps extends cdk.StackProps {
   sysId: string
@@ -17,7 +19,7 @@ export class MyStack extends cdk.Stack {
     // Network
     // ------------------------------
 
-    const vpcConstruct = new VpcConstruct(this, 'VpcConstruct', {
+    const vpcConstruct = new Vpc(this, 'VpcConstruct', {
       bucketName: `${props.sysId}-${props.envId}-s3-flowlog-${props.env!.account}`,
       vpcName: `${props.sysId}-${props.envId}-vpc-main`,
       sgPubricName: `${props.sysId}-${props.envId}-sg-public`,
@@ -29,14 +31,33 @@ export class MyStack extends cdk.Stack {
     // Database
     // ------------------------------
 
-    const auroraConstruct = new AuroraConstruct(this, 'AuroraConstruct', {
+    const auroraConstruct = new AuroraMySql(this, 'AuroraPostgreSqlConstruct', {
       dbUserName: 'admin',
-      vpc: vpcConstruct.result.vpc,
-      subnets: utils.getIsolatedSubnetsFromVpc(vpcConstruct.result.vpc),
-      dbSecurityGroups: [vpcConstruct.result.securityGroup.secure],
-      endpointSecurityGroups:  [vpcConstruct.result.securityGroup.private],
+      vpc: vpcConstruct.vpc,
+      subnets: utils.getIsolatedSubnetsFromVpc(vpcConstruct.vpc),
+      dbSecurityGroups: [vpcConstruct.securityGroup.secure],
+      endpointSecurityGroups:  [vpcConstruct.securityGroup.private],
       secretName: `${props.sysId}-${props.envId}-secret-aurora`,
       clusterIdentifier: `${props.sysId}-${props.envId}-rds-cluster`,
+    });
+
+    // ------------------------------
+    // Container
+    // ------------------------------
+
+    const ecrConstruct = new Ecr(this, 'EcrConstruct', {
+      env: props.env!,
+      repositoryName: `${props.sysId}-${props.envId}-ecr-repo`,
+    });
+
+    const ecsConstruct = new EcsFargate(this, 'EcsConstruct', {
+      vpc: vpcConstruct.vpc,
+      ecrRepository: ecrConstruct.ecrRepository,
+      secret: auroraConstruct.dbSecret,
+      clusterName: `${props.sysId}-${props.envId}-ecs-cluster-sample`,
+      serviceName: `${props.sysId}-${props.envId}-ecs-service-sample`,
+      loadBalancerName: `${props.sysId}-${props.envId}-alb-sample`,
+      bucketName: `${props.sysId}-${props.envId}-s3-accesslog-${props.env!.account}`,
     });
   }
 }
